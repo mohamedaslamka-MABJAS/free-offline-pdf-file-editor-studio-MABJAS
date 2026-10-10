@@ -2,7 +2,7 @@
 <html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>FREE OFFLINE PDF EDITOR - POWERED BY MABJAS</title>
     
     <!-- Tailwind CSS -->
@@ -127,8 +127,8 @@
             background: rgba(56, 189, 248, 0.15) !important;
         }
 
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--bg-accent); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
 
@@ -143,12 +143,44 @@
         }
         #mascot-container:active { cursor: grabbing; }
 
-        body.mobile-mode #main-app-container {
-            flex-direction: column !important;
-            overflow-y: auto !important;
+        /* Workspace Viewport with Both Horizontal & Vertical Scrollbars */
+        #zoom-viewport-container {
+            width: 100%;
+            flex: 1;
+            overflow: auto !important;
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            position: relative;
         }
-        body.mobile-mode #sidebar { width: 100% !important; }
-        body.mobile-mode #workspace { width: 100% !important; min-height: 500px; }
+
+        #thumbnail-grid {
+            min-width: max-content;
+        }
+
+        /* Automatic Mobile & Tablet Adaptation (No manual switch needed) */
+        @media (max-width: 1024px) {
+            body {
+                overflow-y: auto !important;
+                height: auto !important;
+                min-height: 100vh;
+            }
+            #main-app-container {
+                flex-direction: column !important;
+                overflow: visible !important;
+                height: auto !important;
+            }
+            #sidebar {
+                width: 100% !important;
+                max-height: 280px;
+                margin-bottom: 8px;
+            }
+            #workspace {
+                width: 100% !important;
+                height: 650px !important;
+                margin-bottom: 8px;
+            }
+        }
     </style>
 </head>
 <body data-theme="cyberpunk" class="h-screen w-screen flex flex-col justify-between overflow-hidden">
@@ -159,7 +191,7 @@
         <canvas id="mascot-canvas" width="70" height="70"></canvas>
     </div>
 
-    <header class="relative z-10 glass-panel px-4 py-2.5 mx-3 mt-3 rounded-2xl flex items-center justify-between shadow-xl">
+    <header class="relative z-10 glass-panel px-4 py-2.5 mx-3 mt-3 rounded-2xl flex items-center justify-between shadow-xl flex-wrap gap-2">
         <div class="flex items-center space-x-3">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white text-xl shadow-lg glow-effect">
                 <i class="fa-solid fa-file-pdf"></i>
@@ -168,7 +200,7 @@
                 <h1 class="font-extrabold tracking-wide text-lg bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-300 bg-clip-text text-transparent">
                     FREE OFFLINE PDF EDITOR
                 </h1>
-                <div class="flex items-center space-x-2 text-xs text-muted font-medium">
+                <div class="flex items-center space-x-2 text-xs text-muted font-medium flex-wrap">
                     <span class="text-emerald-400"><i class="fa-solid fa-bolt text-xs"></i> 100% Client-Side</span>
                     <span>•</span>
                     <span class="text-amber-400"><i class="fa-solid fa-shield-halved text-xs"></i> Zero Uploads</span>
@@ -178,7 +210,7 @@
             </div>
         </div>
 
-        <div class="flex items-center space-x-3 text-xs">
+        <div class="flex items-center space-x-3 text-xs flex-wrap gap-2">
             <div class="flex items-center space-x-1.5 bg-slate-800/60 px-2.5 py-1.5 rounded-xl border border-slate-700/50">
                 <i class="fa-solid fa-palette text-cyan-400"></i>
                 <select id="theme-select" class="bg-transparent font-medium focus:outline-none cursor-pointer">
@@ -199,10 +231,6 @@
                     <option value="cell" class="bg-slate-900">Precision Cell</option>
                 </select>
             </div>
-
-            <button id="view-toggle-btn" class="bg-slate-800/60 hover:bg-slate-700/80 p-2 rounded-xl border border-slate-700/50 transition" title="Toggle Responsive Layout">
-                <i class="fa-solid fa-mobile-screen-button text-amber-400 text-sm"></i>
-            </button>
 
             <div class="flex items-center space-x-1 bg-slate-800/60 p-1 rounded-xl border border-slate-700/50">
                 <button id="font-dec-btn" class="px-2 py-0.5 hover:bg-slate-700 rounded-lg font-bold">A-</button>
@@ -346,7 +374,7 @@
             </div>
 
             <!-- Workspace Drag Drop Zone -->
-            <div id="drop-zone" class="flex-1 border-2 border-dashed border-slate-700/80 rounded-xl relative overflow-auto flex flex-col items-center justify-start p-4 transition-all">
+            <div id="drop-zone" class="flex-1 border-2 border-dashed border-slate-700/80 rounded-xl relative overflow-hidden flex flex-col items-center justify-start p-2 transition-all">
                 
                 <div id="empty-state" class="m-auto text-center space-y-3 pointer-events-none">
                     <div class="w-16 h-16 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mx-auto text-3xl border border-cyan-500/20 animate-pulse">
@@ -358,14 +386,14 @@
                     </div>
                 </div>
 
-                <div id="zoom-viewport-container" class="w-full flex-1 overflow-auto flex justify-center items-start p-2">
-                    <!-- Tight Thumbnail Cards Grid -->
-                    <div id="thumbnail-grid" class="hidden w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 transition-transform origin-top"></div>
+                <!-- Scrollable Viewport with Horiz & Vert Scrollbars -->
+                <div id="zoom-viewport-container" class="w-full h-full overflow-auto flex justify-start items-start p-2">
+                    <div id="thumbnail-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 transition-transform origin-top"></div>
                 </div>
 
             </div>
 
-            <div id="module-options-bar" class="mt-3 pt-3 border-t border-slate-700/50 flex items-center justify-between text-xs text-muted shrink-0">
+            <div id="module-options-bar" class="mt-3 pt-3 border-t border-slate-700/50 flex items-center justify-between text-xs text-muted shrink-0 flex-wrap gap-2">
                 <div id="module-status-msg" class="font-medium text-slate-300">
                     <i class="fa-solid fa-circle-info text-cyan-400 mr-1.5"></i> Image to PDF tool ready. Upload images to begin.
                 </div>
@@ -378,7 +406,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="relative z-10 glass-panel px-4 py-2 mx-3 mb-3 rounded-xl flex items-center justify-between text-xs text-muted">
+    <footer class="relative z-10 glass-panel px-4 py-2 mx-3 mb-3 rounded-xl flex items-center justify-between text-xs text-muted flex-wrap gap-2">
         <div class="flex items-center space-x-2">
             <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
             <span class="font-semibold text-emerald-400">Offline Engine Ready</span>
@@ -574,9 +602,9 @@
         drawMascot();
 
         const state = {
-            activeModule: 'img2pdf', // Default to Image to PDF
-            loadedPages: [], // Stores loaded PDF pages
-            loadedImages: [], // Stores uploaded images for Image-to-PDF tool
+            activeModule: 'img2pdf',
+            loadedPages: [],
+            loadedImages: [],
             fontSize: 14,
             zoomLevel: 100
         };
@@ -586,7 +614,6 @@
         const clockWidget = document.getElementById('clock-widget');
         const audioToggleBtn = document.getElementById('audio-toggle-btn');
         const audioIcon = document.getElementById('audio-icon');
-        const viewToggleBtn = document.getElementById('view-toggle-btn');
         const fontDecBtn = document.getElementById('font-dec-btn');
         const fontIncBtn = document.getElementById('font-inc-btn');
         const pdfFileInput = document.getElementById('pdf-file-input');
@@ -634,7 +661,6 @@
             soundEngine.playClick();
         });
 
-        viewToggleBtn.addEventListener('click', () => { document.body.classList.toggle('mobile-mode'); soundEngine.playClick(); });
         fontIncBtn.addEventListener('click', () => { state.fontSize = Math.min(18, state.fontSize + 1); document.documentElement.style.setProperty('--base-font-size', `${state.fontSize}px`); soundEngine.playClick(); });
         fontDecBtn.addEventListener('click', () => { state.fontSize = Math.max(11, state.fontSize - 1); document.documentElement.style.setProperty('--base-font-size', `${state.fontSize}px`); soundEngine.playClick(); });
 
@@ -644,7 +670,6 @@
             soundEngine.playClick();
         });
 
-        // Clear all files
         clearAllBtn.addEventListener('click', () => {
             soundEngine.playClick();
             state.loadedPages = [];
@@ -653,7 +678,6 @@
             moduleStatusMsg.innerHTML = `<i class="fa-solid fa-trash-can text-rose-400 mr-1.5"></i> All open files cleared.`;
         });
 
-        // Reset image settings / rotations
         resetImgSettingsBtn.addEventListener('click', () => {
             soundEngine.playClick();
             document.getElementById('img-orientation').value = 'auto';
@@ -663,7 +687,6 @@
             moduleStatusMsg.innerHTML = `<i class="fa-solid fa-rotate-left text-cyan-400 mr-1.5"></i> Page orientation & rotations reset.`;
         });
 
-        // Navigation module switching logic
         document.querySelectorAll('.module-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 soundEngine.playClick();
@@ -679,7 +702,6 @@
         });
 
         function updateWorkspaceView() {
-            // Hide all context toolbars
             splitTools.classList.add('hidden');
             compressTools.classList.add('hidden');
             img2pdfTools.classList.add('hidden');
@@ -687,7 +709,6 @@
 
             const isImgTool = (state.activeModule === 'img2pdf');
             
-            // Adjust upload button text & accept filters
             if (isImgTool) {
                 pdfFileInput.accept = "image/*";
                 uploadBtnText.textContent = "Open Image File(s)";
@@ -696,7 +717,6 @@
                 uploadBtnText.textContent = "Open PDF File";
             }
 
-            // Determine active items list depending on current tool module
             const itemsList = isImgTool ? state.loadedImages : state.loadedPages;
 
             if (itemsList.length === 0) {
@@ -800,7 +820,7 @@
 
             itemsList.forEach((itemObj, idx) => {
                 const card = document.createElement('div');
-                card.className = 'glass-panel p-2.5 rounded-xl relative group flex flex-col items-center justify-start border border-slate-700/80 hover:border-cyan-400 transition cursor-grab shadow-md h-auto self-start';
+                card.className = 'glass-panel p-2.5 rounded-xl relative group flex flex-col items-center justify-start border border-slate-700/80 hover:border-cyan-400 transition cursor-grab shadow-md h-auto self-start w-[180px] shrink-0';
                 card.draggable = true;
 
                 const wrapper = document.createElement('div');
@@ -875,7 +895,6 @@
             });
         }
 
-        // Bulk page rotation controls
         document.getElementById('rotate-all-right-btn').addEventListener('click', () => {
             state.loadedPages.forEach(p => p.rotation = (p.rotation + 90) % 360);
             soundEngine.playClick();
@@ -905,7 +924,6 @@
                 const pdfDoc = await PDFLib.PDFDocument.create();
 
                 if (isImgTool) {
-                    // Image to PDF compile with exact size fitting
                     const orientationSetting = document.getElementById('img-orientation').value;
 
                     for (let imgObj of state.loadedImages) {
@@ -916,7 +934,6 @@
                         const imgW = isRotated90 ? rawHeight : rawWidth;
                         const imgH = isRotated90 ? rawWidth : rawHeight;
 
-                        // Create temporary rotated image canvas
                         const rotCanvas = document.createElement('canvas');
                         rotCanvas.width = imgW;
                         rotCanvas.height = imgH;
@@ -934,25 +951,21 @@
                         let pageW, pageH;
 
                         if (orientationSetting === 'portrait') {
-                            pageW = 595.28; // Standard A4 width in points
-                            pageH = 841.89; // Standard A4 height in points
+                            pageW = 595.28;
+                            pageH = 841.89;
                         } else if (orientationSetting === 'landscape') {
                             pageW = 841.89;
                             pageH = 595.28;
                         } else {
-                            // Auto / Native (Fits image dimensions 1:1 without scaling/cropping)
                             pageW = imgW;
                             pageH = imgH;
                         }
 
                         const page = pdfDoc.addPage([pageW, pageH]);
-
-                        // Calculate scale to fit inside page boundaries proportionally without cropping
                         const scale = Math.min(pageW / imgW, pageH / imgH);
                         const fitWidth = imgW * scale;
                         const fitHeight = imgH * scale;
 
-                        // Center the image on the PDF page
                         const x = (pageW - fitWidth) / 2;
                         const y = (pageH - fitHeight) / 2;
 
@@ -964,10 +977,8 @@
                         });
                     }
                 } else {
-                    // PDF Compile / Compression / Split
                     let pagesToExport = state.loadedPages;
 
-                    // Check for Split Range Filtering
                     if (state.activeModule === 'split') {
                         const rangeVal = document.getElementById('split-range-input').value.trim();
                         if (rangeVal) {
@@ -1007,7 +1018,7 @@
                         tCtx.rotate((pageObj.rotation * Math.PI) / 180);
 
                         if (isRotated90) tCtx.drawImage(pageObj.canvas, -pHeight / 2, -pWidth / 2);
-                        else tCtx.drawImage(pageObj.canvas, -pWidth / 2, -pHeight / 2);
+                        else tCtx.drawImage(pageObj.canvas, -pWidth / 2, -pWidth / 2);
 
                         tCtx.restore();
 
@@ -1023,7 +1034,6 @@
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
                 const link = document.createElement('a');
                 
-                // Naming convention: mabjas(YYYYMMDD_HHMMSS)_.pdf
                 const now = new Date();
                 const pad = (n) => String(n).padStart(2, '0');
                 const dateStr = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
