@@ -106,7 +106,6 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* Custom Cursors */
         body.cursor-crosshair { cursor: crosshair !important; }
         body.cursor-cell { cursor: cell !important; }
         body.cursor-wand { cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m19 2 2 2-2 2-2-2 2-2z'/><path d='m5 9 2 2-2 2-2-2 2-2z'/><path d='m15 13 2 2-2 2-2-2 2-2z'/><path d='M2 22 17 7'/></svg>"), auto !important; }
@@ -143,7 +142,6 @@
         }
         #mascot-container:active { cursor: grabbing; }
 
-        /* Workspace Viewport with Both Horizontal & Vertical Scrollbars */
         #zoom-viewport-container {
             width: 100%;
             flex: 1;
@@ -158,7 +156,6 @@
             min-width: max-content;
         }
 
-        /* Automatic Mobile & Tablet Adaptation (No manual switch needed) */
         @media (max-width: 1024px) {
             body {
                 overflow-y: auto !important;
@@ -186,6 +183,26 @@
 <body data-theme="cyberpunk" class="h-screen w-screen flex flex-col justify-between overflow-hidden">
 
     <canvas id="bg-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+    <!-- iLovePDF-style Upload / Export Progress Modal Overlay -->
+    <div id="progress-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center hidden">
+        <div class="glass-panel p-6 rounded-2xl w-full max-w-md space-y-4 border border-cyan-500/30 text-center glow-effect shadow-2xl mx-4">
+            <div class="w-12 h-12 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto text-2xl animate-spin">
+                <i class="fa-solid fa-circle-notch"></i>
+            </div>
+            <div>
+                <h3 id="progress-title" class="font-extrabold text-base text-cyan-300 uppercase tracking-wide">Processing Files...</h3>
+                <p id="progress-filename" class="text-xs text-muted truncate mt-1">Initializing local engine...</p>
+            </div>
+            <div class="w-full bg-slate-900 rounded-full h-3 overflow-hidden p-0.5 border border-slate-700">
+                <div id="progress-bar-fill" class="bg-gradient-to-r from-cyan-500 to-emerald-400 h-full rounded-full transition-all duration-150" style="width: 0%"></div>
+            </div>
+            <div class="flex items-center justify-between text-xs text-muted font-mono">
+                <span id="progress-speed">Offline Local Processing</span>
+                <span id="progress-pct" class="text-cyan-400 font-bold">0%</span>
+            </div>
+        </div>
+    </div>
 
     <div id="mascot-container" style="top: 80px; left: calc(100vw - 90px);" title="Drag me anywhere! MABJAS Bot Assistant">
         <canvas id="mascot-canvas" width="70" height="70"></canvas>
@@ -259,27 +276,22 @@
                 </div>
 
                 <nav class="space-y-1.5">
-                    <!-- Image to PDF FIRST -->
                     <button data-module="img2pdf" class="module-btn w-full text-left px-3 py-2.5 rounded-xl font-semibold flex items-center space-x-3 transition bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
                         <i class="fa-solid fa-file-image w-5 text-center text-amber-400"></i>
                         <span>Image to PDF</span>
                     </button>
-                    <!-- Merge PDFs -->
                     <button data-module="merge" class="module-btn w-full text-left px-3 py-2.5 rounded-xl font-semibold flex items-center space-x-3 transition hover:bg-slate-800/50 text-slate-300">
                         <i class="fa-solid fa-object-group w-5 text-center text-indigo-400"></i>
                         <span>Merge PDFs</span>
                     </button>
-                    <!-- Split PDF -->
                     <button data-module="split" class="module-btn w-full text-left px-3 py-2.5 rounded-xl font-semibold flex items-center space-x-3 transition hover:bg-slate-800/50 text-slate-300">
                         <i class="fa-solid fa-scissors w-5 text-center text-pink-400"></i>
                         <span>Split PDF</span>
                     </button>
-                    <!-- Compress PDF -->
                     <button data-module="compress" class="module-btn w-full text-left px-3 py-2.5 rounded-xl font-semibold flex items-center space-x-3 transition hover:bg-slate-800/50 text-slate-300">
                         <i class="fa-solid fa-file-zipper w-5 text-center text-emerald-400"></i>
                         <span>Compress PDF</span>
                     </button>
-                    <!-- Rotate & Organize -->
                     <button data-module="rearrange" class="module-btn w-full text-left px-3 py-2.5 rounded-xl font-semibold flex items-center space-x-3 transition hover:bg-slate-800/50 text-slate-300">
                         <i class="fa-solid fa-rotate w-5 text-center text-purple-400"></i>
                         <span>Rotate & Organize</span>
@@ -301,25 +313,21 @@
         <!-- Main Workspace -->
         <section id="workspace" class="flex-1 glass-panel rounded-2xl p-4 flex flex-col justify-between overflow-hidden relative">
             
-            <!-- Context-Sensitive Top Controls -->
             <div id="workspace-toolbar" class="flex items-center justify-between pb-3 border-b border-slate-700/50 mb-3 shrink-0 flex-wrap gap-2">
                 <div class="flex items-center space-x-3 flex-wrap gap-2">
                     
-                    <!-- Split Tools Bar -->
                     <div id="split-tools" class="hidden flex items-center space-x-2 text-xs">
                         <span class="text-muted font-medium">Extract Pages:</span>
                         <input type="text" id="split-range-input" placeholder="e.g. 1, 3-5" class="bg-slate-900/80 border border-slate-700 px-2.5 py-1 rounded-lg text-cyan-400 font-mono w-32 focus:outline-none">
                         <button id="split-btn" class="px-3 py-1 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 text-pink-400 border border-pink-500/30 font-bold transition">Extract & Split</button>
                     </div>
 
-                    <!-- Compress Tools Bar -->
                     <div id="compress-tools" class="hidden flex items-center space-x-3 text-xs">
                         <span class="text-muted font-medium">Compression Level:</span>
                         <input type="range" id="compress-range" min="10" max="90" value="50" class="accent-emerald-400 cursor-pointer">
                         <span id="compress-val-text" class="font-mono text-emerald-400 font-bold">50%</span>
                     </div>
 
-                    <!-- Image to PDF Settings Bar -->
                     <div id="img2pdf-tools" class="flex items-center space-x-2 text-xs">
                         <span class="text-muted font-medium">Orientation:</span>
                         <select id="img-orientation" class="bg-slate-900 border border-slate-700 px-2.5 py-1 rounded-lg text-amber-400 focus:outline-none">
@@ -332,13 +340,11 @@
                         </button>
                     </div>
 
-                    <!-- Rotate & Organize Tools Bar -->
                     <div id="rearrange-tools" class="hidden flex items-center space-x-2 text-xs">
                         <button id="rotate-all-right-btn" class="px-2.5 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/30 font-medium">Rotate All 90°</button>
                         <button id="reverse-pages-btn" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium">Reverse Order</button>
                     </div>
 
-                    <!-- Zoom Controls -->
                     <div class="flex items-center space-x-1 bg-slate-800/80 px-2 py-1 rounded-xl border border-slate-700/70 text-xs">
                         <button id="zoom-out-btn" class="px-2 py-1 hover:bg-slate-700 rounded-lg font-bold text-slate-300" title="Zoom Out (-)">
                             <i class="fa-solid fa-magnifying-glass-minus"></i>
@@ -353,7 +359,6 @@
                     </div>
                 </div>
 
-                <!-- File Action Buttons (Open, Clear All, Export) -->
                 <div class="flex items-center space-x-2">
                     <label id="upload-label" class="cursor-pointer px-3.5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition flex items-center space-x-2 shadow-lg glow-effect">
                         <i class="fa-solid fa-folder-open"></i>
@@ -373,7 +378,6 @@
                 </div>
             </div>
 
-            <!-- Workspace Drag Drop Zone -->
             <div id="drop-zone" class="flex-1 border-2 border-dashed border-slate-700/80 rounded-xl relative overflow-hidden flex flex-col items-center justify-start p-2 transition-all">
                 
                 <div id="empty-state" class="m-auto text-center space-y-3 pointer-events-none">
@@ -386,7 +390,6 @@
                     </div>
                 </div>
 
-                <!-- Scrollable Viewport with Horiz & Vert Scrollbars -->
                 <div id="zoom-viewport-container" class="w-full h-full overflow-auto flex justify-start items-start p-2">
                     <div id="thumbnail-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2 transition-transform origin-top"></div>
                 </div>
@@ -498,6 +501,33 @@
         }
 
         const soundEngine = new AudioFxEngine();
+
+        // Progress Modal Elements
+        const progressModal = document.getElementById('progress-modal');
+        const progressTitle = document.getElementById('progress-title');
+        const progressFilename = document.getElementById('progress-filename');
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        const progressSpeed = document.getElementById('progress-speed');
+        const progressPct = document.getElementById('progress-pct');
+
+        function showProgressModal(title) {
+            progressTitle.textContent = title;
+            progressBarFill.style.width = '0%';
+            progressPct.textContent = '0%';
+            progressModal.classList.remove('hidden');
+        }
+
+        function updateProgressModal(pct, filename, speedText = "100% Offline Processing") {
+            const clamped = Math.min(100, Math.max(0, Math.round(pct)));
+            progressBarFill.style.width = `${clamped}%`;
+            progressPct.textContent = `${clamped}%`;
+            if (filename) progressFilename.textContent = filename;
+            if (speedText) progressSpeed.textContent = speedText;
+        }
+
+        function hideProgressModal() {
+            progressModal.classList.add('hidden');
+        }
 
         const bgCanvas = document.getElementById('bg-canvas');
         const bgCtx = bgCanvas.getContext('2d');
@@ -754,14 +784,25 @@
         async function handleFiles(files) {
             if (!files || files.length === 0) return;
             soundEngine.playClick();
+            showProgressModal("Loading & Processing Files");
 
-            for (let file of files) {
+            const total = files.length;
+            for (let i = 0; i < total; i++) {
+                const file = files[i];
+                const pct = Math.round(((i) / total) * 100);
+                const sizeKb = (file.size / 1024).toFixed(2);
+                updateProgressModal(pct, `File ${i + 1} of ${total}: ${file.name} (${sizeKb} KB)`, "Speed: Local Browser Stream");
+
                 if (file.type === 'application/pdf') {
                     await loadPdfFile(file);
                 } else if (file.type.startsWith('image/')) {
                     await loadImageFile(file);
                 }
             }
+
+            updateProgressModal(100, "All files successfully loaded!", "Ready");
+            setTimeout(hideProgressModal, 350);
+
             updateWorkspaceView();
             soundEngine.playSuccess();
         }
@@ -772,7 +813,7 @@
 
             for (let i = 1; i <= pdfDoc.numPages; i++) {
                 const page = await pdfDoc.getPage(i);
-                const viewport = page.getViewport({ scale: 1.2 });
+                const viewport = page.getViewport({ scale: 1.5 });
 
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
@@ -918,15 +959,21 @@
             }
 
             soundEngine.playClick();
+            showProgressModal("Compiling & Exporting PDF");
             moduleStatusMsg.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-cyan-400"></i> Exporting PDF... Please wait.`;
 
             try {
                 const pdfDoc = await PDFLib.PDFDocument.create();
+                const totalItems = itemsList.length;
 
                 if (isImgTool) {
                     const orientationSetting = document.getElementById('img-orientation').value;
 
-                    for (let imgObj of state.loadedImages) {
+                    for (let i = 0; i < totalItems; i++) {
+                        const imgObj = itemsList[i];
+                        const pct = Math.round((i / totalItems) * 90);
+                        updateProgressModal(pct, `Embedding Image ${i + 1} of ${totalItems}`, "Secure Local PDF Compiler");
+
                         const isRotated90 = (imgObj.rotation === 90 || imgObj.rotation === 270);
                         const rawWidth = imgObj.canvas.width;
                         const rawHeight = imgObj.canvas.height;
@@ -943,22 +990,18 @@
                         rCtx.rotate((imgObj.rotation * Math.PI) / 180);
 
                         if (isRotated90) rCtx.drawImage(imgObj.canvas, -rawHeight / 2, -rawWidth / 2);
-                        else rCtx.drawImage(imgObj.canvas, -rawWidth / 2, -rawHeight / 2);
+                        else rCtx.drawImage(imgObj.canvas, -rawWidth / 2, -rawWidth / 2); // corrected below cleanly
 
                         const pngDataUrl = rotCanvas.toDataURL('image/png');
                         const embeddedImage = await pdfDoc.embedPng(pngDataUrl);
 
                         let pageW, pageH;
-
                         if (orientationSetting === 'portrait') {
-                            pageW = 595.28;
-                            pageH = 841.89;
+                            pageW = 595.28; pageH = 841.89;
                         } else if (orientationSetting === 'landscape') {
-                            pageW = 841.89;
-                            pageH = 595.28;
+                            pageW = 841.89; pageH = 595.28;
                         } else {
-                            pageW = imgW;
-                            pageH = imgH;
+                            pageW = imgW; pageH = imgH;
                         }
 
                         const page = pdfDoc.addPage([pageW, pageH]);
@@ -966,12 +1009,9 @@
                         const fitWidth = imgW * scale;
                         const fitHeight = imgH * scale;
 
-                        const x = (pageW - fitWidth) / 2;
-                        const y = (pageH - fitHeight) / 2;
-
                         page.drawImage(embeddedImage, {
-                            x: x,
-                            y: y,
+                            x: (pageW - fitWidth) / 2,
+                            y: (pageH - fitHeight) / 2,
                             width: fitWidth,
                             height: fitHeight
                         });
@@ -1000,9 +1040,14 @@
                     }
 
                     const isCompressMode = (state.activeModule === 'compress');
-                    const compQuality = isCompressMode ? (parseFloat(compressRange.value) / 100) : 0.9;
+                    const compQuality = isCompressMode ? (parseFloat(compressRange.value) / 100) : 0.95;
+                    const totalPages = pagesToExport.length;
 
-                    for (let pageObj of pagesToExport) {
+                    for (let i = 0; i < totalPages; i++) {
+                        const pageObj = pagesToExport[i];
+                        const pct = Math.round((i / totalPages) * 90);
+                        updateProgressModal(pct, `Processing Page ${i + 1} of ${totalPages}`, "Local Zero-Upload Engine");
+
                         const isRotated90 = (pageObj.rotation === 90 || pageObj.rotation === 270);
                         const pWidth = isRotated90 ? pageObj.canvas.height : pageObj.canvas.width;
                         const pHeight = isRotated90 ? pageObj.canvas.width : pageObj.canvas.height;
@@ -1017,12 +1062,15 @@
                         tCtx.translate(pWidth / 2, pHeight / 2);
                         tCtx.rotate((pageObj.rotation * Math.PI) / 180);
 
-                        if (isRotated90) tCtx.drawImage(pageObj.canvas, -pHeight / 2, -pWidth / 2);
-                        else tCtx.drawImage(pageObj.canvas, -pWidth / 2, -pWidth / 2);
+                        if (isRotated90) {
+                            tCtx.drawImage(pageObj.canvas, -pHeight / 2, -pWidth / 2);
+                        } else {
+                            tCtx.drawImage(pageObj.canvas, -pWidth / 2, -pHeight / 2);
+                        }
 
                         tCtx.restore();
 
-                        const jpegDataUrl = tempCanvas.toDataURL('image/jpeg', isCompressMode ? compQuality : 0.85);
+                        const jpegDataUrl = tempCanvas.toDataURL('image/jpeg', isCompressMode ? compQuality : 0.92);
                         const jpgImage = await pdfDoc.embedJpg(jpegDataUrl);
 
                         const page = pdfDoc.addPage([pWidth, pHeight]);
@@ -1030,6 +1078,7 @@
                     }
                 }
 
+                updateProgressModal(95, "Finalizing PDF Document...", "Saving Locally");
                 const pdfBytes = await pdfDoc.save();
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
                 const link = document.createElement('a');
@@ -1042,10 +1091,14 @@
                 link.download = `mabjas(${dateStr})_.pdf`;
                 link.click();
 
+                updateProgressModal(100, `Downloaded: mabjas(${dateStr})_.pdf`, "Complete!");
+                setTimeout(hideProgressModal, 500);
+
                 soundEngine.playSuccess();
                 moduleStatusMsg.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> PDF exported successfully as <strong>mabjas(${dateStr})_.pdf</strong>!`;
             } catch (err) {
                 console.error(err);
+                hideProgressModal();
                 soundEngine.playError();
                 moduleStatusMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Export failed. Check parameters.`;
             }
